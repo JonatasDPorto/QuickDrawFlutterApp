@@ -2,15 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:http/http.dart' as http;
+import 'package:quick_draw_flutter_app/model/classificacao_model.dart';
 
-Future<String> classificarCNN(File imageFile, String filename) async {
+Future<List<Classificacao>> classificar(File imageFile, String filename) async {
+  print('Enviando imagem...');
   var stream = http.ByteStream(imageFile.openRead());
   stream.cast();
   var length = await imageFile.length();
-
-  //this ip is my network's IPv4 ( I connected both my laptop and mobile
-  //to this WiFi while establishing the connection)
-
   var uri = Uri.parse('http://192.168.0.118:5000/classificar');
   var request = http.MultipartRequest("POST", uri);
   var multipartFile =
@@ -23,5 +21,10 @@ Future<String> classificarCNN(File imageFile, String filename) async {
   final Map<String, dynamic> responseJson =
       json.decode(result.toString()) as Map<String, dynamic>;
 
-  return responseJson["msg"];
+  return [
+    Classificacao.fromList(
+        'CNN', List<double>.from(responseJson['cnn'].map((e) => e.toDouble()))),
+    Classificacao.fromList(
+        'RNN', List<double>.from(responseJson['rnn'].map((e) => e.toDouble()))),
+  ];
 }

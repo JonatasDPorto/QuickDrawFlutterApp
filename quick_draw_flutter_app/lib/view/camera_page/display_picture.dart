@@ -4,6 +4,8 @@ import 'package:image/image.dart' as img;
 import 'package:image_cropper/image_cropper.dart';
 import 'package:flutter/material.dart';
 import 'package:quick_draw_flutter_app/controller/api.dart';
+import 'package:quick_draw_flutter_app/model/classificacao_model.dart';
+import 'package:quick_draw_flutter_app/view/list_classificacao/list_classificacao.dart';
 
 class DisplayPictureScreen extends StatefulWidget {
   final String imagePath;
@@ -17,14 +19,13 @@ class DisplayPictureScreen extends StatefulWidget {
 
 class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   late File file;
-  late String label;
-
+  late List<Classificacao> classificacoes;
+  late Size size;
   @override
   void initState() {
     super.initState();
-    label = '???';
+    classificacoes = [];
     file = File(widget.imagePath);
-    print(file.path);
     cropImage();
   }
 
@@ -44,16 +45,23 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
   }
 
   @override
+  void didChangeDependencies() {
+    size = MediaQuery.of(context).size;
+    super.didChangeDependencies();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           Image.file(file),
-          (label != '???')
-              ? Text(
-                  'Isso é um desenho de: $label',
-                  style: const TextStyle(fontSize: 20),
+          (classificacoes.isNotEmpty)
+              ? SizedBox(
+                  width: size.width,
+                  height: size.width,
+                  child: ListClassificacao(classificacoes: classificacoes),
                 )
               : Container(),
           Row(
@@ -71,11 +79,10 @@ class _DisplayPictureScreenState extends State<DisplayPictureScreen> {
                 style: ElevatedButton.styleFrom(
                     textStyle: const TextStyle(fontSize: 20)),
                 onPressed: () {
-                  if (label != '???') return;
                   var fileName = file.path.split('/').last;
-                  classificarCNN(file, fileName).then((value) {
+                  classificar(file, fileName).then((value) {
                     setState(() {
-                      label = value;
+                      classificacoes = value;
                     });
                   });
                 },
